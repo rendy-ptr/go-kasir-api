@@ -1,3 +1,3 @@
-module kasir-api
+module go-kasir-api
 
 go 1.25.6

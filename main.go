@@ -1,54 +1,75 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-type Produk struct {
-	ID    int     `json:"id"`
-	Nama  string  `json:"nama"`
-	Harga float64 `json:"harga"`
-	Stok  int     `json:"stok"`
+type Category struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
-var produk = []Produk{
+var categories = []Category{
 	{
-		ID:    1,
-		Nama:  "Indomie Godog",
-		Harga: 3500,
-		Stok:  10,
+		ID:          1,
+		Name:        "Snacks",
+		Description: "Chips, biscuits, crackers, and other light snacks",
 	},
 	{
-		ID:    2,
-		Nama:  "Vit 1000 ml",
-		Harga: 3000,
-		Stok:  40,
+		ID:          2,
+		Name:        "Instant Food",
+		Description: "Instant noodles, canned food, and ready-to-eat meals",
 	},
 	{
-		ID:    3,
-		Nama:  "Kecap",
-		Harga: 12000,
-		Stok:  20,
+		ID:          3,
+		Name:        "Frozen Food",
+		Description: "Frozen meat, nuggets, sausages, and frozen vegetables",
+	},
+	{
+		ID:          4,
+		Name:        "Beverages",
+		Description: "Soft drinks, mineral water, juice, and tea",
+	},
+	{
+		ID:          5,
+		Name:        "Dairy Products",
+		Description: "Milk, cheese, yogurt, and other dairy-based products",
+	},
+	{
+		ID:          6,
+		Name:        "Bakery",
+		Description: "Bread, cakes, pastries, and baked goods",
+	},
+	{
+		ID:          7,
+		Name:        "Condiments",
+		Description: "Sauces, ketchup, chili sauce, soy sauce, and seasonings",
+	},
+	{
+		ID:          8,
+		Name:        "Traditional Food",
+		Description: "Local and traditional food products",
 	},
 }
 
-func getProdukById(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/produk/")
+func getCategoryById(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
 		return
 	}
 
-	for _, p := range produk {
-		if p.ID == id {
+	for _, category := range categories {
+		if category.ID == id {
 			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(p); err != nil {
+			if err := json.NewEncoder(w).Encode(category); err != nil {
 				log.Println("Error encoding JSON:", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -56,23 +77,23 @@ func getProdukById(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	http.Error(w, "Produk belum ada", http.StatusNotFound)
+	http.Error(w, "Category not existing", http.StatusNotFound)
 }
 
-func deleteProduk(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/produk/")
+func deleteCategory(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
 		return
 	}
 
-	for i, p := range produk {
-		if p.ID == id {
-			produk = append(produk[:i], produk[i+1:]...)
+	for index, category := range categories {
+		if category.ID == id {
+			categories = append(categories[:index], categories[index+1:]...)
 			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(map[string]string{
-				"message": "Sukses Delete Produk",
+				"message": "Successfully deleted category",
 			}); err != nil {
 				log.Println("Error encoding JSON:", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -82,41 +103,29 @@ func deleteProduk(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.Error(w, "Produk belum ada", http.StatusNotFound)
+	http.Error(w, "Category not existing", http.StatusNotFound)
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]string{
-		"status":  "OK",
-		"message": "Api is running",
-	}); err != nil {
-		log.Println("Error encoding JSON:", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func produkHandler(w http.ResponseWriter, r *http.Request) {
+func categoryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case http.MethodGet:
-		if err := json.NewEncoder(w).Encode(produk); err != nil {
+		if err := json.NewEncoder(w).Encode(categories); err != nil {
 			log.Println("Error encoding JSON:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	case http.MethodPost:
-		var produkBaru Produk
-		if err := json.NewDecoder(r.Body).Decode(&produkBaru); err != nil {
+		var newCategory Category
+		if err := json.NewDecoder(r.Body).Decode(&newCategory); err != nil {
 			log.Println("Error decoding JSON:", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		produkBaru.ID = len(produk) + 1
-		produk = append(produk, produkBaru)
+		newCategory.ID = len(categories) + 1
+		categories = append(categories, newCategory)
 		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(produkBaru); err != nil {
+		if err := json.NewEncoder(w).Encode(newCategory); err != nil {
 			log.Println("Error encoding JSON:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -126,43 +135,28 @@ func produkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func produkByIDHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
 
-	case http.MethodGet:
-		getProdukById(w, r)
 
-	case http.MethodPut:
-		updateProduk(w, r)
-
-	case http.MethodDelete:
-		deleteProduk(w, r)
-
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-func updateProduk(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/produk/")
+func updateCategory(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
 		return
 	}
-	var updateProduk Produk
-	if err := json.NewDecoder(r.Body).Decode(&updateProduk); err != nil {
+	var updateCategory Category
+	if err := json.NewDecoder(r.Body).Decode(&updateCategory); err != nil {
 		log.Println("Error decoding JSON:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	for i := range produk {
-		if produk[i].ID == id {
-			updateProduk.ID = id
-			produk[i] = updateProduk
+	for index := range categories {
+		if categories[index].ID == id {
+			updateCategory.ID = id
+			categories[index] = updateCategory
 			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(updateProduk); err != nil {
+			if err := json.NewEncoder(w).Encode(updateCategory); err != nil {
 				log.Println("Error encoding JSON:", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -171,13 +165,29 @@ func updateProduk(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.Error(w, "Produk belum ada", http.StatusNotFound)
+	http.Error(w, "Category not existing", http.StatusNotFound)
+}
+
+func categoryByIDHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+
+	case http.MethodGet:
+		getCategoryById(w, r)
+
+	case http.MethodPut:
+		updateCategory(w, r)
+
+	case http.MethodDelete:
+		deleteCategory(w, r)
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 func main() {
-	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/api/produk", produkHandler)
-	http.HandleFunc("/api/produk/", produkByIDHandler)
+	http.HandleFunc("/api/categories", categoryHandler)
+	http.HandleFunc("/api/categories/", categoryByIDHandler)
 
 	fmt.Println("Server running on http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
