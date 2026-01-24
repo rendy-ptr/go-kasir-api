@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -135,8 +135,6 @@ func categoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 func updateCategory(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
@@ -189,8 +187,25 @@ func main() {
 	http.HandleFunc("/api/categories", categoryHandler)
 	http.HandleFunc("/api/categories/", categoryByIDHandler)
 
-	fmt.Println("Server running on http://localhost:8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal("ListenAndServe:", err)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte("API is running")); err != nil {
+			log.Println("Error writing response:", err)
+		}
+	})
+
+	// LOCAL
+	// fmt.Println("Server running on http://localhost:8080")
+	// if err := http.ListenAndServe(":8080", nil); err != nil {
+	// 	log.Fatal("ListenAndServe:", err)
+	// }
+
+	// DEPLOYMENT
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+
+	log.Println("Listening on port", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
