@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go-kasir-api/database"
 	"go-kasir-api/handlers"
 	"go-kasir-api/repositories"
@@ -15,8 +14,8 @@ import (
 )
 
 type Config struct {
-	Port   string `mapstructure:"PORT"`
-	DBConn string `mapstructure:"DB_CONN"`
+	Port         string `mapstructure:"PORT"`
+	DATABASE_URL string `mapstructure:"DATABASE_URL"`
 }
 
 func main() {
@@ -28,17 +27,21 @@ func main() {
 		_ = viper.ReadInConfig()
 	}
 
-	config := Config{
-		Port:   viper.GetString("PORT"),
-		DBConn: viper.GetString("DB_CONN"),
+	port := viper.GetString("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
-	db, err := database.InitDB(config.DBConn)
+	databaseURL := viper.GetString("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL is not set")
+	}
+
+	db, err := database.InitDB(databaseURL)
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}
 	defer db.Close()
-
 
 	categoryRepo := repositories.NewCategoryRepository(db)
 	categoryService := services.NewCategoryService(categoryRepo)
@@ -73,13 +76,11 @@ func main() {
 	// 	port = "8080"
 	// }
 
-	addr := "0.0.0.0:" + config.Port
+	addr := "0.0.0.0:" + port
+	log.Println("Server running on", addr)
 
-	fmt.Println("Server running di http://" + addr)
-
-	err = http.ListenAndServe(addr, nil)
-	if err != nil {
-		fmt.Println("gagal running server", err)
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		log.Fatal("ListenAndServe:", err)
 	}
 
 }
