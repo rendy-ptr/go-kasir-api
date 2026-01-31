@@ -20,7 +20,6 @@ type Config struct {
 }
 
 func main() {
-
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
@@ -40,8 +39,6 @@ func main() {
 	}
 	defer db.Close()
 
-	// http.HandleFunc("/api/categories", categoryHandler)
-	// http.HandleFunc("/api/categories/", categoryByIDHandler)
 
 	categoryRepo := repositories.NewCategoryRepository(db)
 	categoryService := services.NewCategoryService(categoryRepo)
@@ -76,7 +73,7 @@ func main() {
 	// 	port = "8080"
 	// }
 
-	addr := "localhost:" + config.Port
+	addr := "0.0.0.0:" + config.Port
 
 	fmt.Println("Server running di http://" + addr)
 
