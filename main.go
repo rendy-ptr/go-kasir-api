@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	
 )
 
 type Config struct {
@@ -34,6 +33,7 @@ func main() {
 	}
 
 	databaseURL := viper.GetString("DATABASE_URL")
+
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL is not set")
 	}
@@ -51,6 +51,19 @@ func main() {
 	productRepo := repositories.NewProductRepository(db)
 	productService := services.NewProductService(productRepo)
 	productHandler := handlers.NewProductHandler(productService)
+
+	transactionRepo := repositories.NewTransactionRepository(db)
+	transactionService := services.NewTransactionService(transactionRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+
+	reportRepo := repositories.NewReportRepository(db)
+	reportService := services.NewReportService(reportRepo)
+	reportHandler := handlers.NewReportHandler(reportService)
+
+	http.HandleFunc("/api/report/today", reportHandler.HandleTodayReport)
+	http.HandleFunc("/api/report", reportHandler.HandleReportByDateRange)
+
+	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout)
 
 	http.HandleFunc("/api/product", productHandler.HandleProducts)
 	http.HandleFunc("/api/product/", productHandler.HandleProductByID)
